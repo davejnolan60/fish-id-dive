@@ -16,7 +16,7 @@ const Index = () => {
         
         <div className="relative container mx-auto px-4">
           <div className="max-w-2xl">
-            <div className="bg-card/90 backdrop-blur-md rounded-2xl p-8 shadow-depth">
+            <div className="bg-card/80 backdrop-blur-md rounded-2xl p-8 shadow-depth">
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                 Welcome to SpearID
               </h1>
