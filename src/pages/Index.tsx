@@ -1,12 +1,52 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import Header from "@/components/Header";
+import heroImage from "@/assets/hero-underwater.jpg";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30">
+      <Header />
+      
+      <main 
+        className="relative min-h-screen bg-cover bg-center bg-no-repeat flex items-center"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
+        
+        <div className="relative container mx-auto px-4">
+          <div className="max-w-2xl">
+            <div className="bg-card/90 backdrop-blur-md rounded-2xl p-8 shadow-depth">
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+                Welcome to SpearID
+              </h1>
+              
+              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                Memorize your target fish before you get in the water
+                by using our educational quiz and studying our
+                database of over 300 species
+              </p>
+              
+              <div className="space-y-4">
+                <Link to="/quiz">
+                  <Button variant="hero" size="xl" className="w-full md:w-auto px-12">
+                    Generate Quiz
+                  </Button>
+                </Link>
+                
+                <div className="flex flex-col md:flex-row gap-3 mt-6">
+                  <Button variant="outline" size="lg" className="flex-1">
+                    Create Account
+                  </Button>
+                  <Button variant="outline" size="lg" className="flex-1">
+                    Log In
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
