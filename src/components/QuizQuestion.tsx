@@ -73,48 +73,47 @@ const QuizQuestion = ({ question, onAnswer, onNext }: QuizQuestionProps) => {
         </div>
       </div>
 
-      {/* Mobile Layout */}
+      {/* Mobile Layout - Fullscreen Video with Right Side Buttons */}
       <div className="md:hidden relative">
-        <div className="relative -mx-4 -mt-4 p-4">
-          <AspectRatio ratio={16 / 9} className="rounded-lg overflow-hidden bg-black">
-            <video 
-              controls
-              autoPlay
-              loop
-              muted
-              playsInline
-              src={question.videoUrl}
-              className="w-full h-full object-contain"
-            />
-          </AspectRatio>
+        <div className="fixed inset-0 -z-10">
+          <video 
+            controls
+            autoPlay
+            loop
+            muted
+            playsInline
+            src={question.videoUrl}
+            className="w-full h-full object-cover"
+          />
+          {/* Gradient overlay for better button visibility */}
+          <div className="absolute inset-0 bg-gradient-to-l from-black/40 via-transparent to-transparent" />
+        </div>
+        
+        {/* Answer buttons positioned on the right side */}
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col space-y-3 w-36 z-10">
+          {question.options.map((option) => (
+            <Button
+              key={option}
+              variant={getButtonVariant(option)}
+              size="quiz"
+              onClick={() => handleAnswerClick(option)}
+              disabled={showResult}
+              className="w-full shadow-lg backdrop-blur-sm bg-white/90 hover:bg-white/95 text-black border border-white/20"
+            >
+              {option}
+            </Button>
+          ))}
           
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
-          
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col space-y-3 w-48">
-            {question.options.map((option) => (
-              <Button
-                key={option}
-                variant={getButtonVariant(option)}
-                size="quiz"
-                onClick={() => handleAnswerClick(option)}
-                disabled={showResult}
-                className="w-full shadow-lg"
-              >
-                {option}
-              </Button>
-            ))}
-            
-            {showResult && (
-              <Button
-                variant="default"
-                size="quiz"
-                onClick={onNext}
-                className="w-full mt-4 shadow-lg"
-              >
-                Next
-              </Button>
-            )}
-          </div>
+          {showResult && (
+            <Button
+              variant="default"
+              size="quiz"
+              onClick={onNext}
+              className="w-full mt-4 shadow-lg backdrop-blur-sm bg-primary/90 hover:bg-primary text-white"
+            >
+              Next
+            </Button>
+          )}
         </div>
       </div>
 
