@@ -1,29 +1,34 @@
 import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ChartContainer } from "@/components/ui/chart";
+import { PieChart, Pie, Cell } from "recharts";
 import Header from "@/components/Header";
 import resultsBackground from "@/assets/results-background.jpg";
 
 const Results = () => {
   const location = useLocation();
-  const { score, totalQuestions, percentage } = location.state || { 
+  const { score, totalQuestions, percentage, answersDetailed } = location.state || { 
     score: 0, 
     totalQuestions: 12, 
-    percentage: 0 
+    percentage: 0,
+    answersDetailed: [] as { questionId: string | number; selected: string; correct: string; isCorrect: boolean }[]
   };
 
-  // Sample data for correct/incorrect answers display
-  const correctFish = [
-    { name: "Red Morwong", image: "/fish-samples/red-morwong.jpg" },
-    { name: "Kingfish", image: "/fish-samples/kingfish.jpg" },
-    { name: "Ludrick", image: "/fish-samples/ludrick.jpg" }
-  ];
+  // Derive actual correct/incorrect answers from quiz state
+  const correctFish = (answersDetailed || [])
+    .filter((a: any) => a.isCorrect)
+    .map((a: any) => ({
+      name: a.correct,
+      selected: a.selected,
+    }));
 
-  const incorrectFish = [
-    { name: "Goatfish", image: "/fish-samples/goatfish.jpg" },
-    { name: "Snapper", image: "/fish-samples/snapper.jpg" },
-    { name: "Blue Morwong", image: "/fish-samples/blue-morwong.jpg" }
-  ];
+  const incorrectFish = (answersDetailed || [])
+    .filter((a: any) => !a.isCorrect)
+    .map((a: any) => ({
+      name: a.correct,
+      selected: a.selected,
+    }));
 
   const getScoreMessage = () => {
     if (percentage >= 80) return "Excellent fish identification skills!";
@@ -53,10 +58,30 @@ const Results = () => {
                   Congratulations!
                 </h1>
                 
-                {/* Score Circle */}
-                <div className="relative w-32 h-32 mx-auto mb-6">
-                  <div className="w-32 h-32 rounded-full bg-success flex items-center justify-center">
-                    <span className="text-3xl font-bold text-success-foreground">
+                {/* Score Pie Chart */}
+                <div className="relative w-40 h-40 mx-auto mb-6">
+                  <ChartContainer
+                    className="!aspect-square"
+                    config={{}}
+                  >
+                    <PieChart>
+                      <Pie
+                        data={[{ name: "Correct", value: Math.max(0, Math.min(100, percentage)) }, { name: "Remaining", value: Math.max(0, 100 - Math.max(0, Math.min(100, percentage))) }]}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={56}
+                        outerRadius={80}
+                        startAngle={90}
+                        endAngle={-270}
+                        stroke="transparent"
+                      >
+                        <Cell fill={"hsl(var(--primary))"} />
+                        <Cell fill={"hsl(var(--muted))"} />
+                      </Pie>
+                    </PieChart>
+                  </ChartContainer>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-3xl font-bold text-foreground">
                       {percentage}%
                     </span>
                   </div>
@@ -97,6 +122,9 @@ const Results = () => {
                 Correct
               </h2>
               <div className="space-y-4">
+                {correctFish.length === 0 && (
+                  <div className="text-center text-muted-foreground">No correct answers this time.</div>
+                )}
                 {correctFish.map((fish, index) => (
                   <div key={index} className="bg-background/50 rounded-lg p-3">
                     <div className="text-center">
@@ -118,6 +146,9 @@ const Results = () => {
                 Incorrect
               </h2>
               <div className="space-y-4">
+                {incorrectFish.length === 0 && (
+                  <div className="text-center text-muted-foreground">No incorrect answers. Great job!</div>
+                )}
                 {incorrectFish.map((fish, index) => (
                   <div key={index} className="bg-background/50 rounded-lg p-3">
                     <div className="text-center">
@@ -127,6 +158,7 @@ const Results = () => {
                       <div className="bg-error text-error-foreground px-3 py-1 rounded text-sm font-medium">
                         {fish.name}
                       </div>
+                      <div className="text-xs text-muted-foreground mt-1">Your answer: {fish.selected}</div>
                     </div>
                   </div>
                 ))}

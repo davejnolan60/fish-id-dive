@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import quizFish from "@/assets/quiz-fish-1.jpg";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface QuizQuestionProps {
   question: {
-    id: number;
-    image: string;
+    id: string | number;
+    videoUrl: string;
     options: string[];
     correctAnswer: string;
   };
-  onAnswer: (isCorrect: boolean) => void;
+  onAnswer: (isCorrect: boolean, selected: string) => void;
   onNext: () => void;
 }
 
@@ -17,13 +17,19 @@ const QuizQuestion = ({ question, onAnswer, onNext }: QuizQuestionProps) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
 
+  // Reset selection when the question changes
+  useEffect(() => {
+    setSelectedAnswer(null);
+    setShowResult(false);
+  }, [question?.id]);
+
   const handleAnswerClick = (answer: string) => {
     if (selectedAnswer) return; // Prevent multiple selections
     
     setSelectedAnswer(answer);
     setShowResult(true);
     const isCorrect = answer === question.correctAnswer;
-    onAnswer(isCorrect);
+    onAnswer(isCorrect, answer);
   };
 
   const getButtonVariant = (option: string) => {
@@ -38,11 +44,17 @@ const QuizQuestion = ({ question, onAnswer, onNext }: QuizQuestionProps) => {
       {/* Desktop Layout */}
       <div className="hidden md:block">
         <div className="mb-8">
-          <img 
-            src={quizFish} 
-            alt="Fish to identify" 
-            className="w-full h-96 object-cover rounded-xl shadow-depth"
-          />
+          <AspectRatio ratio={16 / 9} className="rounded-xl shadow-depth overflow-hidden bg-black">
+            <video
+              controls
+              autoPlay
+              loop
+              muted
+              playsInline
+              src={question.videoUrl}
+              className="w-full h-full object-contain"
+            />
+          </AspectRatio>
         </div>
         
         <div className="grid grid-cols-2 gap-4 mb-8">
@@ -63,12 +75,18 @@ const QuizQuestion = ({ question, onAnswer, onNext }: QuizQuestionProps) => {
 
       {/* Mobile Layout */}
       <div className="md:hidden relative">
-        <div className="relative h-screen -mx-4 -mt-4">
-          <img 
-            src={quizFish} 
-            alt="Fish to identify" 
-            className="w-full h-full object-cover"
-          />
+        <div className="relative -mx-4 -mt-4 p-4">
+          <AspectRatio ratio={16 / 9} className="rounded-lg overflow-hidden bg-black">
+            <video 
+              controls
+              autoPlay
+              loop
+              muted
+              playsInline
+              src={question.videoUrl}
+              className="w-full h-full object-contain"
+            />
+          </AspectRatio>
           
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
           
