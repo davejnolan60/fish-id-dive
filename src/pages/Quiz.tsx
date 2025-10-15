@@ -22,6 +22,7 @@ const Quiz = () => {
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false);
   const [hasPromptedFullscreen, setHasPromptedFullscreen] = useState(false);
   const [fullscreenTarget, setFullscreenTarget] = useState<HTMLElement | null>(null);
+  const [fullscreenVideo, setFullscreenVideo] = useState<HTMLVideoElement | null>(null);
   const { data: questions, isLoading, error } = useQuizQuestions(12);
   const totalQuestions = questions?.length ?? 0;
   const currentQuestion = questions?.[currentQuestionIndex];
@@ -35,20 +36,50 @@ const Quiz = () => {
   }, [hasPromptedFullscreen, isMobile, questions]);
 
   const handleFullscreenRequest = async () => {
+    const requestFullscreen = async (element: any) => {
+      if (!element) return false;
+      if (element.requestFullscreen) {
+        await element.requestFullscreen();
+        return true;
+      }
+      if (element.webkitRequestFullscreen) {
+        await element.webkitRequestFullscreen();
+        return true;
+      }
+      return false;
+    };
+
+    let fullscreenStarted = false;
+
     try {
-      const el = fullscreenTarget ?? document.documentElement;
-      // Prefer requesting fullscreen on the quiz container so overlays remain visible
-      if (el.requestFullscreen) {
-        await el.requestFullscreen();
-      // @ts-ignore - vendor prefixed API for older Safari
-      } else if ((el as any).webkitRequestFullscreen) {
-        // @ts-ignore
-        await (el as any).webkitRequestFullscreen();
+      if (fullscreenVideo) {
+        try {
+          fullscreenStarted = await requestFullscreen(fullscreenVideo);
+        } catch {
+          fullscreenStarted = false;
+        }
+        if (!fullscreenStarted && typeof (fullscreenVideo as any).webkitEnterFullscreen === "function") {
+          try {
+            (fullscreenVideo as any).webkitEnterFullscreen();
+            fullscreenStarted = true;
+          } catch {
+            fullscreenStarted = false;
+          }
+        }
+      }
+
+      if (!fullscreenStarted) {
+        const fallbackEl = fullscreenTarget ?? document.documentElement;
+        try {
+          fullscreenStarted = await requestFullscreen(fallbackEl);
+        } catch {
+          fullscreenStarted = false;
+        }
       }
 
       // Attempt to lock orientation to landscape (supported in fullscreen on many browsers)
       // @ts-ignore - orientation API may not exist on all platforms
-      if (screen.orientation && screen.orientation.lock) {
+      if (fullscreenStarted && screen.orientation && screen.orientation.lock) {
         try {
           // @ts-ignore
           await screen.orientation.lock("landscape");
@@ -57,7 +88,7 @@ const Quiz = () => {
         }
       }
     } catch (error) {
-      console.log('Fullscreen request failed:', error);
+      console.log("Fullscreen request failed:", error);
     } finally {
       setShowFullscreenPrompt(false);
     }
@@ -140,6 +171,7 @@ const Quiz = () => {
               onAnswer={handleAnswer}
               onNext={handleNext}
               onFullscreenContainerRef={setFullscreenTarget}
+              onVideoRef={setFullscreenVideo}
             />
           </>
         )}

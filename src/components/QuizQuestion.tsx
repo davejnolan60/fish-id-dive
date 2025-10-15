@@ -13,12 +13,15 @@ interface QuizQuestionProps {
   onNext: () => void;
   // Parent can capture the fullscreen container for mobile
   onFullscreenContainerRef?: (el: HTMLElement | null) => void;
+  onVideoRef?: (el: HTMLVideoElement | null) => void;
 }
 
-const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef }: QuizQuestionProps) => {
+const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, onVideoRef }: QuizQuestionProps) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const mobileFullscreenContainerRef = useRef<HTMLDivElement | null>(null);
+  const desktopVideoRef = useRef<HTMLVideoElement | null>(null);
+  const mobileVideoRef = useRef<HTMLVideoElement | null>(null);
 
   // Reset selection when the question changes
   useEffect(() => {
@@ -31,7 +34,26 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef }: 
     if (onFullscreenContainerRef) {
       onFullscreenContainerRef(mobileFullscreenContainerRef.current);
     }
-  }, [onFullscreenContainerRef]);
+  }, [onFullscreenContainerRef, question?.id]);
+
+  // Provide the active video element to parent so it can request fullscreen directly
+  useEffect(() => {
+    if (!onVideoRef) return;
+
+    const updateVideoRef = () => {
+      const prefersDesktop = window.innerWidth >= 768;
+      const target = prefersDesktop ? desktopVideoRef.current : mobileVideoRef.current;
+      onVideoRef(target);
+    };
+
+    updateVideoRef();
+    window.addEventListener("resize", updateVideoRef);
+
+    return () => {
+      window.removeEventListener("resize", updateVideoRef);
+      onVideoRef(null);
+    };
+  }, [onVideoRef, question?.id]);
 
   const handleAnswerClick = (answer: string) => {
     if (selectedAnswer) return; // Prevent multiple selections
@@ -56,6 +78,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef }: 
         <div className="mb-8">
           <AspectRatio ratio={16 / 9} className="rounded-xl shadow-depth overflow-hidden bg-black">
             <video
+              ref={desktopVideoRef}
               controls
               autoPlay
               loop
@@ -87,6 +110,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef }: 
       <div className="md:hidden relative" ref={mobileFullscreenContainerRef}>
         <div className="fixed inset-0 -z-10">
           <video 
+            ref={mobileVideoRef}
             controls
             autoPlay
             loop
