@@ -20,6 +20,7 @@ const Quiz = () => {
     isCorrect: boolean;
   }[]>([]);
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false);
+  const [hasPromptedFullscreen, setHasPromptedFullscreen] = useState(false);
   const [fullscreenTarget, setFullscreenTarget] = useState<HTMLElement | null>(null);
   const { data: questions, isLoading, error } = useQuizQuestions(12);
   const totalQuestions = questions?.length ?? 0;
@@ -27,10 +28,11 @@ const Quiz = () => {
 
   // Show fullscreen prompt on mobile when questions load
   useEffect(() => {
-    if (isMobile && questions && questions.length > 0 && !showFullscreenPrompt) {
+    if (!hasPromptedFullscreen && isMobile && questions && questions.length > 0) {
       setShowFullscreenPrompt(true);
+      setHasPromptedFullscreen(true);
     }
-  }, [isMobile, questions, showFullscreenPrompt]);
+  }, [hasPromptedFullscreen, isMobile, questions]);
 
   const handleFullscreenRequest = async () => {
     try {
