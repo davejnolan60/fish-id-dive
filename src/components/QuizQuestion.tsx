@@ -11,17 +11,28 @@ interface QuizQuestionProps {
   };
   onAnswer: (isCorrect: boolean, selected: string) => void;
   onNext: () => void;
+  // Parent can capture the fullscreen container for mobile
+  onFullscreenContainerRef?: (el: HTMLElement | null) => void;
 }
 
-const QuizQuestion = ({ question, onAnswer, onNext }: QuizQuestionProps) => {
+const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef }: QuizQuestionProps) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const mobileFullscreenContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Reset selection when the question changes
   useEffect(() => {
     setSelectedAnswer(null);
     setShowResult(false);
   }, [question?.id]);
+
+  // Expose the mobile fullscreen container to parent (for fullscreen requests)
+  useEffect(() => {
+    if (onFullscreenContainerRef) {
+      onFullscreenContainerRef(mobileFullscreenContainerRef.current);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mobileFullscreenContainerRef.current]);
 
   const handleAnswerClick = (answer: string) => {
     if (selectedAnswer) return; // Prevent multiple selections
@@ -73,8 +84,8 @@ const QuizQuestion = ({ question, onAnswer, onNext }: QuizQuestionProps) => {
         </div>
       </div>
 
-      {/* Mobile Layout - Fullscreen Video with Right Side Buttons */}
-      <div className="md:hidden relative">
+      {/* Mobile Layout - Fullscreen Container with Video and Right Side Buttons */}
+      <div className="md:hidden relative" ref={mobileFullscreenContainerRef}>
         <div className="fixed inset-0 -z-10">
           <video 
             controls

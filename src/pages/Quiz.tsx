@@ -20,6 +20,7 @@ const Quiz = () => {
     isCorrect: boolean;
   }[]>([]);
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false);
+  const [fullscreenTarget, setFullscreenTarget] = useState<HTMLElement | null>(null);
   const { data: questions, isLoading, error } = useQuizQuestions(12);
   const totalQuestions = questions?.length ?? 0;
   const currentQuestion = questions?.[currentQuestionIndex];
@@ -33,8 +34,25 @@ const Quiz = () => {
 
   const handleFullscreenRequest = async () => {
     try {
-      if (document.documentElement.requestFullscreen) {
-        await document.documentElement.requestFullscreen();
+      const el = fullscreenTarget ?? document.documentElement;
+      // Prefer requesting fullscreen on the quiz container so overlays remain visible
+      if (el.requestFullscreen) {
+        await el.requestFullscreen();
+      // @ts-ignore - vendor prefixed API for older Safari
+      } else if ((el as any).webkitRequestFullscreen) {
+        // @ts-ignore
+        await (el as any).webkitRequestFullscreen();
+      }
+
+      // Attempt to lock orientation to landscape (supported in fullscreen on many browsers)
+      // @ts-ignore - orientation API may not exist on all platforms
+      if (screen.orientation && screen.orientation.lock) {
+        try {
+          // @ts-ignore
+          await screen.orientation.lock("landscape");
+        } catch (_) {
+          // Ignore if not supported or user denied
+        }
       }
     } catch (error) {
       console.log('Fullscreen request failed:', error);
@@ -97,14 +115,6 @@ const Quiz = () => {
               >
                 Enter Fullscreen
               </Button>
-              <Button 
-                variant="outline"
-                onClick={() => setShowFullscreenPrompt(false)}
-                className="w-full"
-                size="lg"
-              >
-                Continue Without Fullscreen
-              </Button>
             </div>
           </div>
         </div>
@@ -127,6 +137,7 @@ const Quiz = () => {
               question={currentQuestion}
               onAnswer={handleAnswer}
               onNext={handleNext}
+              onFullscreenContainerRef={setFullscreenTarget}
             />
           </>
         )}
