@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
@@ -31,8 +31,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef }: 
     if (onFullscreenContainerRef) {
       onFullscreenContainerRef(mobileFullscreenContainerRef.current);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mobileFullscreenContainerRef.current]);
+  }, [onFullscreenContainerRef]);
 
   const handleAnswerClick = (answer: string) => {
     if (selectedAnswer) return; // Prevent multiple selections
