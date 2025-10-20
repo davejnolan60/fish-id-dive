@@ -20,6 +20,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const mobileFullscreenContainerRef = useRef<HTMLDivElement | null>(null);
+  const desktopFullscreenContainerRef = useRef<HTMLDivElement | null>(null);
   const desktopVideoRef = useRef<HTMLVideoElement | null>(null);
   const mobileVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -29,11 +30,25 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
     setShowResult(false);
   }, [question?.id]);
 
-  // Expose the mobile fullscreen container to parent (for fullscreen requests)
+  // Expose the appropriate fullscreen container (desktop or mobile) to parent
   useEffect(() => {
-    if (onFullscreenContainerRef) {
-      onFullscreenContainerRef(mobileFullscreenContainerRef.current);
-    }
+    if (!onFullscreenContainerRef) return;
+
+    const updateFullscreenTarget = () => {
+      const prefersDesktop = window.innerWidth >= 768;
+      const target = prefersDesktop
+        ? desktopFullscreenContainerRef.current
+        : mobileFullscreenContainerRef.current;
+      onFullscreenContainerRef(target);
+    };
+
+    updateFullscreenTarget();
+    window.addEventListener("resize", updateFullscreenTarget);
+
+    return () => {
+      window.removeEventListener("resize", updateFullscreenTarget);
+      onFullscreenContainerRef(null);
+    };
   }, [onFullscreenContainerRef, question?.id]);
 
   // Provide the active video element to parent so it can request fullscreen directly
@@ -77,7 +92,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
       <div className="hidden md:block">
         <div className="mb-8">
           <AspectRatio ratio={16 / 9} className="rounded-xl shadow-depth overflow-hidden bg-black">
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full" ref={desktopFullscreenContainerRef}>
               <video
                 ref={desktopVideoRef}
                 controls

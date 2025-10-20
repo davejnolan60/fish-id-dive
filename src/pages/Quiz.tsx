@@ -52,7 +52,15 @@ const Quiz = () => {
     let fullscreenStarted = false;
 
     try {
-      if (fullscreenVideo) {
+      if (fullscreenTarget) {
+        try {
+          fullscreenStarted = await requestFullscreen(fullscreenTarget);
+        } catch {
+          fullscreenStarted = false;
+        }
+      }
+
+      if (!fullscreenStarted && fullscreenVideo) {
         try {
           fullscreenStarted = await requestFullscreen(fullscreenVideo);
         } catch {
