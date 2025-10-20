@@ -77,32 +77,46 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
       <div className="hidden md:block">
         <div className="mb-8">
           <AspectRatio ratio={16 / 9} className="rounded-xl shadow-depth overflow-hidden bg-black">
-            <video
-              ref={desktopVideoRef}
-              controls
-              autoPlay
-              loop
-              muted
-              playsInline
-              src={question.videoUrl}
-              className="w-full h-full object-contain"
-            />
+            <div className="relative w-full h-full">
+              <video
+                ref={desktopVideoRef}
+                controls
+                autoPlay
+                loop
+                muted
+                playsInline
+                src={question.videoUrl}
+                className="w-full h-full object-contain"
+              />
+              <div className="absolute inset-0 bg-gradient-to-l from-black/50 via-black/20 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 flex items-center justify-end p-8 pointer-events-none">
+                <div className="flex w-72 flex-col space-y-4 pointer-events-auto">
+                  {question.options.map((option) => (
+                    <Button
+                      key={option}
+                      variant={getButtonVariant(option)}
+                      size="quiz"
+                      onClick={() => handleAnswerClick(option)}
+                      disabled={showResult}
+                      className="w-full shadow-lg backdrop-blur-sm bg-white/90 hover:bg-white/95 text-black border border-white/20"
+                    >
+                      {option}
+                    </Button>
+                  ))}
+                  {showResult && (
+                    <Button
+                      variant="hero"
+                      size="xl"
+                      onClick={onNext}
+                      className="w-full mt-2"
+                    >
+                      Next Question
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
           </AspectRatio>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          {question.options.map((option) => (
-            <Button
-              key={option}
-              variant={getButtonVariant(option)}
-              size="quiz"
-              onClick={() => handleAnswerClick(option)}
-              disabled={showResult}
-              className="w-full"
-            >
-              {option}
-            </Button>
-          ))}
         </div>
       </div>
 
@@ -151,19 +165,6 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
         </div>
       </div>
 
-      {/* Desktop Next Button */}
-      {showResult && (
-        <div className="hidden md:flex justify-center">
-          <Button
-            variant="hero"
-            size="xl"
-            onClick={onNext}
-            className="px-12"
-          >
-            Next Question
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
