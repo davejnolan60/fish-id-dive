@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Fragment } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -155,6 +155,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
   };
 
   return (
+    <Fragment>
     <div className="w-full max-w-4xl mx-auto">
       {/* Desktop Layout */}
       <div className="hidden md:block">
@@ -251,6 +252,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
     </div>
     {/* Render fullscreen overlay buttons using portal */}
     {createPortal(<FullscreenOverlayButtons />, document.body)}
+    </>
   );
 };
 
