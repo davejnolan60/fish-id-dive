@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import screenfull from "screenfull";
 import Header from "@/components/Header";
 import QuizProgress from "@/components/QuizProgress";
 import QuizQuestion from "@/components/QuizQuestion";
@@ -36,7 +37,7 @@ const Quiz = () => {
   }, [hasPromptedFullscreen, isMobile, questions]);
 
   const handleFullscreenRequest = async () => {
-    const requestFullscreen = async (element: any) => {
+    const requestNativeFullscreen = async (element: any) => {
       if (!element) return false;
       if (element.requestFullscreen) {
         await element.requestFullscreen();
@@ -49,12 +50,30 @@ const Quiz = () => {
       return false;
     };
 
+    const requestWithScreenfull = async (element: Element | null) => {
+      if (!element || !screenfull.isEnabled) return false;
+      try {
+        await screenfull.request(element);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
     let fullscreenStarted = false;
 
     try {
       if (fullscreenTarget) {
+        fullscreenStarted = await requestWithScreenfull(fullscreenTarget);
+      }
+
+      if (!fullscreenStarted && fullscreenVideo) {
+        fullscreenStarted = await requestWithScreenfull(fullscreenVideo);
+      }
+
+      if (!fullscreenStarted && fullscreenTarget) {
         try {
-          fullscreenStarted = await requestFullscreen(fullscreenTarget);
+          fullscreenStarted = await requestNativeFullscreen(fullscreenTarget);
         } catch {
           fullscreenStarted = false;
         }
@@ -62,7 +81,7 @@ const Quiz = () => {
 
       if (!fullscreenStarted && fullscreenVideo) {
         try {
-          fullscreenStarted = await requestFullscreen(fullscreenVideo);
+          fullscreenStarted = await requestNativeFullscreen(fullscreenVideo);
         } catch {
           fullscreenStarted = false;
         }
@@ -79,7 +98,7 @@ const Quiz = () => {
       if (!fullscreenStarted) {
         const fallbackEl = fullscreenTarget ?? document.documentElement;
         try {
-          fullscreenStarted = await requestFullscreen(fallbackEl);
+          fullscreenStarted = await requestNativeFullscreen(fallbackEl);
         } catch {
           fullscreenStarted = false;
         }
