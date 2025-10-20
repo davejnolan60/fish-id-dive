@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
@@ -19,6 +20,7 @@ interface QuizQuestionProps {
 const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, onVideoRef }: QuizQuestionProps) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const mobileFullscreenContainerRef = useRef<HTMLDivElement | null>(null);
   const desktopFullscreenContainerRef = useRef<HTMLDivElement | null>(null);
   const desktopVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -29,6 +31,32 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
     setSelectedAnswer(null);
     setShowResult(false);
   }, [question?.id]);
+
+  // Monitor fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isCurrentlyFullscreen);
+    };
+
+    // Listen for fullscreen changes
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
 
   // Expose the appropriate fullscreen container (desktop or mobile) to parent
   useEffect(() => {
@@ -84,6 +112,46 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
     if (option === question.correctAnswer) return "correct";
     if (option === selectedAnswer && option !== question.correctAnswer) return "incorrect";
     return "quiz";
+  };
+
+  // Fullscreen overlay buttons component
+  const FullscreenOverlayButtons = () => {
+    if (!isFullscreen) return null;
+
+    return (
+      <div className="fixed inset-0 pointer-events-none z-50">
+        {/* Gradient overlay for better button visibility */}
+        <div className="absolute inset-0 bg-gradient-to-l from-black/50 via-black/20 to-transparent" />
+        
+        {/* Answer buttons positioned on the right side */}
+        <div className="absolute inset-0 flex items-center justify-end p-8">
+          <div className="flex w-72 flex-col space-y-4 pointer-events-auto">
+            {question.options.map((option) => (
+              <Button
+                key={option}
+                variant={getButtonVariant(option)}
+                size="quiz"
+                onClick={() => handleAnswerClick(option)}
+                disabled={showResult}
+                className="w-full shadow-lg backdrop-blur-sm bg-white/90 hover:bg-white/95 text-black border border-white/20"
+              >
+                {option}
+              </Button>
+            ))}
+            {showResult && (
+              <Button
+                variant="hero"
+                size="xl"
+                onClick={onNext}
+                className="w-full mt-2"
+              >
+                Next Question
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -181,6 +249,8 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
       </div>
 
     </div>
+    {/* Render fullscreen overlay buttons using portal */}
+    {createPortal(<FullscreenOverlayButtons />, document.body)}
   );
 };
 
