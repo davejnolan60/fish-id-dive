@@ -32,7 +32,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
     setShowResult(false);
   }, [question?.id]);
 
-  // Monitor fullscreen changes
+  // Monitor fullscreen changes and intercept video fullscreen requests
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isCurrentlyFullscreen = !!(
@@ -57,6 +57,43 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
   }, []);
+
+  // Handle custom fullscreen for container
+  const handleCustomFullscreen = async () => {
+    const desktopContainer = desktopFullscreenContainerRef.current;
+    if (!desktopContainer) return;
+
+    try {
+      if (desktopContainer.requestFullscreen) {
+        await desktopContainer.requestFullscreen();
+      } else if ((desktopContainer as any).webkitRequestFullscreen) {
+        await (desktopContainer as any).webkitRequestFullscreen();
+      } else if ((desktopContainer as any).mozRequestFullScreen) {
+        await (desktopContainer as any).mozRequestFullScreen();
+      } else if ((desktopContainer as any).msRequestFullscreen) {
+        await (desktopContainer as any).msRequestFullscreen();
+      }
+    } catch (error) {
+      console.warn('Failed to request fullscreen:', error);
+    }
+  };
+
+  // Handle exit fullscreen
+  const handleExitFullscreen = async () => {
+    try {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        await (document as any).webkitExitFullscreen();
+      } else if ((document as any).mozCancelFullScreen) {
+        await (document as any).mozCancelFullScreen();
+      } else if ((document as any).msExitFullscreen) {
+        await (document as any).msExitFullscreen();
+      }
+    } catch (error) {
+      console.warn('Failed to exit fullscreen:', error);
+    }
+  };
 
   // Expose the appropriate fullscreen container (desktop or mobile) to parent
   useEffect(() => {
@@ -123,6 +160,17 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
         {/* Gradient overlay for better button visibility */}
         <div className="absolute inset-0 bg-gradient-to-l from-black/50 via-black/20 to-transparent" />
         
+        {/* Exit fullscreen button */}
+        <button
+          onClick={handleExitFullscreen}
+          className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-md backdrop-blur-sm transition-colors pointer-events-auto z-50"
+          title="Exit Fullscreen"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+          </svg>
+        </button>
+        
         {/* Answer buttons positioned on the right side */}
         <div className="absolute inset-0 flex items-center justify-end p-8">
           <div className="flex w-72 flex-col space-y-4 pointer-events-auto">
@@ -171,7 +219,18 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
                 playsInline
                 src={question.videoUrl}
                 className="w-full h-full object-contain"
+                onContextMenu={(e) => e.preventDefault()}
               />
+              {/* Custom fullscreen button */}
+              <button
+                onClick={handleCustomFullscreen}
+                className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-md backdrop-blur-sm transition-colors z-10"
+                title="Fullscreen"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+              </button>
               <div className="absolute inset-0 bg-gradient-to-l from-black/50 via-black/20 to-transparent pointer-events-none" />
               <div className="absolute inset-0 flex items-center justify-end p-8 pointer-events-none">
                 <div className="flex w-72 flex-col space-y-4 pointer-events-auto">
