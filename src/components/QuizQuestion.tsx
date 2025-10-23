@@ -309,30 +309,43 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
         </div>
         
         {/* Answer buttons positioned on the right side */}
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col space-y-3 w-36 z-10">
-          {question.options.map((option) => (
-            <Button
-              key={option}
-              variant={getButtonVariant(option)}
-              size="quiz"
-              onClick={() => handleAnswerClick(option)}
-              disabled={showResult}
-              className="w-full shadow-lg backdrop-blur-sm bg-white/90 hover:bg-white/95 text-black border border-white/20"
-            >
-              {option}
-            </Button>
-          ))}
-          
-          {showResult && (
-            <Button
-              variant="default"
-              size="quiz"
-              onClick={onNext}
-              className="w-full mt-4 shadow-lg backdrop-blur-sm bg-primary/90 hover:bg-primary text-white"
-            >
-              Next
-            </Button>
-          )}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col justify-between h-[calc(100vh-8rem)] z-10">
+          {/* Answer options */}
+          <div className="flex flex-col justify-between h-full">
+            {question.options.map((option) => (
+              <Button
+                key={option}
+                variant={getButtonVariant(option)}
+                onClick={() => handleAnswerClick(option)}
+                disabled={showResult}
+                className="w-[174px] h-[44px] bg-[#D9D9D9]/50 hover:bg-[#D9D9D9]/70 text-white text-base font-bold border-0 shadow-lg"
+                style={{
+                  backgroundColor: showResult 
+                    ? (option === question.correctAnswer 
+                        ? '#22c55e' 
+                        : option === selectedAnswer 
+                          ? '#ef4444' 
+                          : '#D9D9D9')
+                    : '#D9D9D9',
+                  opacity: showResult 
+                    ? (option === question.correctAnswer || option === selectedAnswer ? 1 : 0.5)
+                    : 0.5
+                }}
+              >
+                {option}
+              </Button>
+            ))}
+            
+            {/* Next button - only visible when question is answered */}
+            {showResult && (
+              <Button
+                onClick={onNext}
+                className="w-[174px] h-[44px] bg-[#D9D9D9]/50 hover:bg-[#D9D9D9]/70 text-white text-base font-bold border-0 shadow-lg"
+              >
+                Next
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
