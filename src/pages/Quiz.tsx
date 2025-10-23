@@ -36,87 +36,24 @@ const Quiz = () => {
     }
   }, [hasPromptedFullscreen, isMobile, questions]);
 
-  const handleFullscreenRequest = async () => {
-    const requestNativeFullscreen = async (element: any) => {
-      if (!element) return false;
-      if (element.requestFullscreen) {
-        await element.requestFullscreen();
-        return true;
-      }
-      if (element.webkitRequestFullscreen) {
-        await element.webkitRequestFullscreen();
-        return true;
-      }
-      return false;
-    };
-
-    const requestWithScreenfull = async (element: Element | null) => {
-      if (!element || !screenfull.isEnabled) return false;
-      try {
-        await screenfull.request(element);
-        return true;
-      } catch {
-        return false;
-      }
-    };
-
-    let fullscreenStarted = false;
+  const handleCustomFullscreenRequest = async () => {
+    // Use the same logic as QuizQuestion's toggle fullscreen
+    if (!fullscreenTarget) return;
 
     try {
-      if (fullscreenTarget) {
-        fullscreenStarted = await requestWithScreenfull(fullscreenTarget);
+      if (fullscreenTarget.requestFullscreen) {
+        await fullscreenTarget.requestFullscreen();
+      } else if ((fullscreenTarget as any).webkitRequestFullscreen) {
+        await (fullscreenTarget as any).webkitRequestFullscreen();
+      } else if ((fullscreenTarget as any).mozRequestFullScreen) {
+        await (fullscreenTarget as any).mozRequestFullScreen();
+      } else if ((fullscreenTarget as any).msRequestFullscreen) {
+        await (fullscreenTarget as any).msRequestFullscreen();
       }
-
-      if (!fullscreenStarted && fullscreenVideo) {
-        fullscreenStarted = await requestWithScreenfull(fullscreenVideo);
-      }
-
-      if (!fullscreenStarted && fullscreenTarget) {
-        try {
-          fullscreenStarted = await requestNativeFullscreen(fullscreenTarget);
-        } catch {
-          fullscreenStarted = false;
-        }
-      }
-
-      if (!fullscreenStarted && fullscreenVideo) {
-        try {
-          fullscreenStarted = await requestNativeFullscreen(fullscreenVideo);
-        } catch {
-          fullscreenStarted = false;
-        }
-        if (!fullscreenStarted && typeof (fullscreenVideo as any).webkitEnterFullscreen === "function") {
-          try {
-            (fullscreenVideo as any).webkitEnterFullscreen();
-            fullscreenStarted = true;
-          } catch {
-            fullscreenStarted = false;
-          }
-        }
-      }
-
-      if (!fullscreenStarted) {
-        const fallbackEl = fullscreenTarget ?? document.documentElement;
-        try {
-          fullscreenStarted = await requestNativeFullscreen(fallbackEl);
-        } catch {
-          fullscreenStarted = false;
-        }
-      }
-
-      // Attempt to lock orientation to landscape (supported in fullscreen on many browsers)
-      // @ts-ignore - orientation API may not exist on all platforms
-      if (fullscreenStarted && screen.orientation && screen.orientation.lock) {
-        try {
-          // @ts-ignore
-          await screen.orientation.lock("landscape");
-        } catch (_) {
-          // Ignore if not supported or user denied
-        }
-      }
+      
+      setShowFullscreenPrompt(false);
     } catch (error) {
-      console.log("Fullscreen request failed:", error);
-    } finally {
+      console.warn('Failed to request fullscreen:', error);
       setShowFullscreenPrompt(false);
     }
   };
@@ -169,7 +106,7 @@ const Quiz = () => {
             </p>
             <div className="space-y-3">
               <Button 
-                onClick={handleFullscreenRequest}
+                onClick={handleCustomFullscreenRequest}
                 className="w-full"
                 size="lg"
               >
@@ -199,6 +136,7 @@ const Quiz = () => {
               onNext={handleNext}
               onFullscreenContainerRef={setFullscreenTarget}
               onVideoRef={setFullscreenVideo}
+              onCustomFullscreen={handleCustomFullscreenRequest}
             />
           </>
         )}

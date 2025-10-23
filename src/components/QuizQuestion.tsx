@@ -15,9 +15,11 @@ interface QuizQuestionProps {
   // Parent can capture the fullscreen container for mobile
   onFullscreenContainerRef?: (el: HTMLElement | null) => void;
   onVideoRef?: (el: HTMLVideoElement | null) => void;
+  // Custom fullscreen handler from parent
+  onCustomFullscreen?: () => void;
 }
 
-const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, onVideoRef }: QuizQuestionProps) => {
+const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, onVideoRef, onCustomFullscreen }: QuizQuestionProps) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -76,22 +78,31 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
         console.warn('Failed to exit fullscreen:', error);
       }
     } else {
-      // Enter fullscreen
-      const desktopContainer = desktopFullscreenContainerRef.current;
-      if (!desktopContainer) return;
+      // Use parent's custom fullscreen handler if available, otherwise use local logic
+      if (onCustomFullscreen) {
+        onCustomFullscreen();
+      } else {
+        // Enter fullscreen - use appropriate container based on screen size
+        const prefersDesktop = window.innerWidth >= 768;
+        const container = prefersDesktop 
+          ? desktopFullscreenContainerRef.current 
+          : mobileFullscreenContainerRef.current;
+        
+        if (!container) return;
 
-      try {
-        if (desktopContainer.requestFullscreen) {
-          await desktopContainer.requestFullscreen();
-        } else if ((desktopContainer as any).webkitRequestFullscreen) {
-          await (desktopContainer as any).webkitRequestFullscreen();
-        } else if ((desktopContainer as any).mozRequestFullScreen) {
-          await (desktopContainer as any).mozRequestFullScreen();
-        } else if ((desktopContainer as any).msRequestFullscreen) {
-          await (desktopContainer as any).msRequestFullscreen();
+        try {
+          if (container.requestFullscreen) {
+            await container.requestFullscreen();
+          } else if ((container as any).webkitRequestFullscreen) {
+            await (container as any).webkitRequestFullscreen();
+          } else if ((container as any).mozRequestFullScreen) {
+            await (container as any).mozRequestFullScreen();
+          } else if ((container as any).msRequestFullscreen) {
+            await (container as any).msRequestFullscreen();
+          }
+        } catch (error) {
+          console.warn('Failed to request fullscreen:', error);
         }
-      } catch (error) {
-        console.warn('Failed to request fullscreen:', error);
       }
     }
   };
@@ -271,16 +282,30 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
         <div className="fixed inset-0 -z-10">
           <video 
             ref={mobileVideoRef}
-            controls
             autoPlay
             loop
             muted
             playsInline
             src={question.videoUrl}
             className="w-full h-full object-cover"
+            onContextMenu={(e) => e.preventDefault()}
           />
-          {/* Gradient overlay for better button visibility */}
-          <div className="absolute inset-0 bg-gradient-to-l from-black/40 via-transparent to-transparent" />
+          {/* Custom fullscreen toggle button */}
+          <button
+            onClick={handleToggleFullscreen}
+            className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-md backdrop-blur-sm transition-colors z-10"
+            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+          >
+            {isFullscreen ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+              </svg>
+            )}
+          </button>
         </div>
         
         {/* Answer buttons positioned on the right side */}
