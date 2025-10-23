@@ -315,10 +315,9 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
             {question.options.map((option) => (
               <Button
                 key={option}
-                variant={getButtonVariant(option)}
                 onClick={() => handleAnswerClick(option)}
                 disabled={showResult}
-                className="w-[174px] h-[44px] bg-[#D9D9D9]/50 hover:bg-[#D9D9D9]/70 text-white text-base font-bold border-0 shadow-lg"
+                className="w-[174px] h-[44px] text-white text-base font-bold border-0 shadow-lg"
                 style={{
                   backgroundColor: showResult 
                     ? (option === question.correctAnswer 
@@ -340,7 +339,11 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
             {showResult && (
               <Button
                 onClick={onNext}
-                className="w-[174px] h-[44px] bg-[#D9D9D9]/50 hover:bg-[#D9D9D9]/70 text-white text-base font-bold border-0 shadow-lg"
+                className="w-[174px] h-[44px] text-white text-base font-bold border-0 shadow-lg"
+                style={{
+                  backgroundColor: '#D9D9D9',
+                  opacity: 0.5
+                }}
               >
                 Next
               </Button>
