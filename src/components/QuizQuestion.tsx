@@ -83,7 +83,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
         onCustomFullscreen();
       } else {
         // Enter fullscreen - use appropriate container based on screen size
-        const prefersDesktop = window.innerWidth >= 768;
+        const prefersDesktop = window.innerWidth >= 1024;
         const container = prefersDesktop 
           ? desktopFullscreenContainerRef.current 
           : mobileFullscreenContainerRef.current;
@@ -113,7 +113,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
     if (!onFullscreenContainerRef) return;
 
     const updateFullscreenTarget = () => {
-      const prefersDesktop = window.innerWidth >= 768;
+      const prefersDesktop = window.innerWidth >= 1024;
       const target = prefersDesktop
         ? desktopFullscreenContainerRef.current
         : mobileFullscreenContainerRef.current;
@@ -134,7 +134,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
     if (!onVideoRef) return;
 
     const updateVideoRef = () => {
-      const prefersDesktop = window.innerWidth >= 768;
+      const prefersDesktop = window.innerWidth >= 1024;
       const target = prefersDesktop ? desktopVideoRef.current : mobileVideoRef.current;
       onVideoRef(target);
     };
@@ -216,7 +216,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
     <>
     <div className="w-full max-w-4xl mx-auto">
       {/* Desktop Layout */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <div className="mb-8">
           <AspectRatio ratio={16 / 9} className="rounded-xl shadow-depth overflow-hidden bg-black">
             <div className="relative w-full h-full" ref={desktopFullscreenContainerRef}>
@@ -278,7 +278,7 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
       </div>
 
       {/* Mobile Layout - Fullscreen Container with Video and Right Side Buttons */}
-      <div className="md:hidden relative" ref={mobileFullscreenContainerRef}>
+      <div className="lg:hidden relative" ref={mobileFullscreenContainerRef}>
         <div className="fixed inset-0 -z-10">
           <video 
             ref={mobileVideoRef}
@@ -317,37 +317,35 @@ const QuizQuestion = ({ question, onAnswer, onNext, onFullscreenContainerRef, on
                 key={option}
                 onClick={() => handleAnswerClick(option)}
                 disabled={showResult}
-                className="w-[174px] h-[44px] text-white text-base font-bold border-0 shadow-lg"
+                className="w-[174px] h-[44px] text-base font-bold border-0 shadow-lg"
                 style={{
                   backgroundColor: showResult 
                     ? (option === question.correctAnswer 
                         ? '#22c55e' 
                         : option === selectedAnswer 
                           ? '#ef4444' 
-                          : '#D9D9D9')
-                    : '#D9D9D9',
-                  opacity: showResult 
-                    ? (option === question.correctAnswer || option === selectedAnswer ? 1 : 0.5)
-                    : 0.5
+                          : 'rgba(217, 217, 217, 0.5)')
+                    : 'rgba(217, 217, 217, 0.5)',
+                  color: 'white'
                 }}
               >
                 {option}
               </Button>
             ))}
             
-            {/* Next button - only visible when question is answered */}
-            {showResult && (
-              <Button
-                onClick={onNext}
-                className="w-[174px] h-[44px] text-white text-base font-bold border-0 shadow-lg"
-                style={{
-                  backgroundColor: '#D9D9D9',
-                  opacity: 0.5
-                }}
-              >
-                Next
-              </Button>
-            )}
+            {/* Next button - always visible, becomes active when question is answered */}
+            <Button
+              onClick={showResult ? onNext : undefined}
+              disabled={!showResult}
+              className="w-[174px] h-[44px] text-base font-bold border-0 shadow-lg"
+              style={{
+                backgroundColor: showResult ? '#D9D9D9' : 'rgba(217, 217, 217, 0.5)',
+                color: 'white',
+                cursor: showResult ? 'pointer' : 'not-allowed'
+              }}
+            >
+              Next
+            </Button>
           </div>
         </div>
       </div>
